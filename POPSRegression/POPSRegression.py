@@ -60,9 +60,9 @@ class POPSRegression(BayesianRidge):
         Method of resampling for the POPS algorithm. 
         must be one of 'sobol', 'latin', 'halton', 'grid', or 'uniform'.
     percentile_clipping : float, default=0.0
-        Percentile to clip from each end of the distribution when determining the hypercube bounds, i.e. spans [x,100-x]. Must be between 0 and 50, but in practice should be between 0.0% and 0.5% for robust bounds
+        Percentile to clip from each end of the distribution when determining the hypercube bounds, i.e. spans [x,100-x]. Value must be between 0 and 50, but in practice should be between 0.0 and 0.5 for robust bounds (i.e. 0% and 0.5%)
     leverage_percentile : float, default=50.0
-        Upper percentile of leverage scores to consider for hypercube fitting. Default is 50%.
+        To accelerate hypercube fitting, only consider points in leverage range [`leverage_percentile`,100.0]. Default is 50%.
     Attributes
     ----------
     coef_ : array-like of shape (n_features,)
@@ -107,7 +107,7 @@ class POPSRegression(BayesianRidge):
         "mode_threshold": [Interval(Real, 0, None, closed="neither")],
         "resample_density": [Interval(Real, 0, None, closed="neither")],
         "percentile_clipping": [Interval(Real, 0, 50., closed="both")],
-        "leverage_percentile": [Interval(Real, 0.0, 100., closed="left")]
+        "leverage_percentile": [Interval(Real, 0.0, 100., closed="left")],
     }
     def __init__(
         self,
@@ -284,22 +284,29 @@ class POPSRegression(BayesianRidge):
             Vh.T, Vh / (eigen_vals_ + lambda_ / alpha_)[:, np.newaxis]
         )
 
-        
         self.errors = (y - X @ self.coef_)
         
         # errors to mean prediction        
         # leverage scores
-        leverage = np.sum(np.dot(X,scaled_sigma_) * X,axis=1)
+        AD = np.dot(X,scaled_sigma_)
+        leverage = np.sum(AD * X,axis=1)
         self.leverage_scores = leverage
         
-        # NEW 02/2025: only consider upper 50% of leverage corrections 
+        # NEW 02/2025: only consider *upper* 50% of leverage corrections 
         # to accelerate hypercube fitting and avoid "zero leverage" errors
-        # 
         leverage_threshold = np.percentile(self.leverage_scores,self.leverage_percentile)
         self.mask = self.leverage_scores >= leverage_threshold
-        self.pointwise_correction = np.dot(X,scaled_sigma_)[self.mask]
+        self.pointwise_correction = np.dot(X,scaled_sigma_)[self.mask] # AD
         self.pointwise_correction *= self.errors[self.mask,None]
         self.pointwise_correction /= self.leverage_scores[self.mask,None]
+
+        # Fisher hypersphere
+        
+        self.fisher_inv_sqrt = linalg.sqrtm(AD.T@AD) # this is the sqrt of the inverse fisher matrix
+        self.fisher_radii = np.linalg.norm(\
+            linalg.solve(self.fisher_inv_sqrt,self.pointwise_correction.T),axis=0)
+        
+        self.fisher_radius = np.percentile(self.fisher_radii,100-self.percentile_clipping)
         
         # Determine bounding hypercube from pointwise fits
         self.hypercube_support, self.hypercube_bounds = \
@@ -309,7 +316,18 @@ class POPSRegression(BayesianRidge):
         self.hypercube_samples,self.misspecification_sigma_ = \
             self._resample_hypercube()
 
+        self.hypersphere_samples = np.random.normal(size=self.hypercube_samples.T.shape)
+        self.hypersphere_samples /= np.linalg.norm(self.hypersphere_samples,axis=1)[:,None]
+        r = np.random.uniform(0.01,1.0,self.hypersphere_samples.shape[0])
+        self.hypersphere_samples *= np.exp(np.log(r))[:,None] 
+        self.hypersphere_samples *= self.fisher_radius
+        
+        print(np.linalg.norm(self.hypersphere_samples,axis=1).max(),self.fisher_radius)
 
+        self.hypersphere_samples = (self.hypersphere_samples@self.fisher_inv_sqrt).T
+
+
+        
         self.sigma_ = (1.0 / alpha_) * scaled_sigma_
         
         self._set_intercept(X_offset_, y_offset_, X_scale_)
@@ -459,7 +477,7 @@ class POPSRegression(BayesianRidge):
         self.hypercube_samples,self.misspecification_sigma_ = \
             self._resample_hypercube(resampling_method=resampling_method)
 
-    def predict(self,X,return_std=False,return_bounds=False,return_epistemic_std=False):
+    def predict(self,X,return_std=False,return_bounds=False,return_epistemic_std=False,sphere=False):
         """
         Make predictions using the POPS model.
 
@@ -503,9 +521,13 @@ class POPSRegression(BayesianRidge):
             res += [np.sqrt(y_misspecification_var + y_epistemic_var)] # y_std
         
         if return_bounds:
-            res += [(X@self.hypercube_samples).max(1) + y_mean] # y_max
-            res += [(X@self.hypercube_samples).min(1) + y_mean] # y_min
-            
+            if sphere:
+                res += [(X@self.hypersphere_samples).max(1) + y_mean] # y_max
+                res += [(X@self.hypersphere_samples).min(1) + y_mean] # y_min
+            else:
+                res += [(X@self.hypercube_samples).max(1) + y_mean] # y_max
+                res += [(X@self.hypercube_samples).min(1) + y_mean] # y_min
+                
         if return_epistemic_std:
             res += [np.sqrt(y_epistemic_var)] # y_epistemic_std
         
