@@ -1,4 +1,7 @@
 # POPSRegression
+
+**[Try the online demo](https://kermodegroup.github.io/demos/apps/regression-demo.html) from Prof. James Kermode (U Warwick) 
+
 Linear regression scheme from the paper 
 
 *Parameter uncertainties for imperfect surrogate models in the low-noise regime*
@@ -16,7 +19,7 @@ TD Swinburne and D Perez, [Machine Learning: Science and Technology 2025](http:/
 ```
 
 ## Installation
-There will be a PR on `scikit-learn` soon, but in the meantime
+There will be a PR on `scikit-learn` "soon", but in the meantime
 ```bash
 pip install POPSRegression
 ```
