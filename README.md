@@ -1,6 +1,6 @@
 # POPSRegression
 
-**[Try the online demo](https://kermodegroup.github.io/demos/apps/regression-demo.html) from Prof. James Kermode (U Warwick) 
+**[Try the online demo](https://kermodegroup.github.io/demos/regression-demo.html) from Prof. James Kermode (U Warwick)**
 
 Linear regression scheme from the paper 
 
