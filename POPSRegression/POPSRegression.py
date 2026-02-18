@@ -1,4 +1,5 @@
 import numpy as np
+import sklearn
 from sklearn.linear_model import BayesianRidge
 from scipy import linalg
 from scipy.linalg import pinvh, eigh
@@ -7,7 +8,9 @@ from sklearn.utils._param_validation import Interval, StrOptions
 from sklearn.linear_model._base import _preprocess_data, _rescale_data
 from sklearn.utils.validation import _check_sample_weight, validate_data
 from numbers import Real, Integral
-from scipy.stats import qmc 
+from scipy.stats import qmc
+
+_SKLEARN_VERSION = tuple(int(x) for x in sklearn.__version__.split(".")[:2])
 
 
 ###############################################################################
@@ -200,17 +203,27 @@ class POPSRegression(BayesianRidge):
         if sample_weight is not None:
             sample_weight = _check_sample_weight(sample_weight, X, dtype=dtype)
 
-        X, y, X_offset_, y_offset_, X_scale_ = _preprocess_data(
-            X,
-            y,
-            fit_intercept=self.fit_intercept,
-            copy=self.copy_X,
-            sample_weight=sample_weight,
-        )
-
-        if sample_weight is not None:
-            # Sample weight can be implemented via a simple rescaling.
-            X, y, _ = _rescale_data(X, y, sample_weight)
+        if _SKLEARN_VERSION >= (1, 8):
+            # sklearn >= 1.8: returns 6 values; rescaling handled internally
+            X, y, X_offset_, y_offset_, X_scale_, _ = _preprocess_data(
+                X,
+                y,
+                fit_intercept=self.fit_intercept,
+                copy=self.copy_X,
+                sample_weight=sample_weight,
+                rescale_with_sw=True,
+            )
+        else:
+            X, y, X_offset_, y_offset_, X_scale_ = _preprocess_data(
+                X,
+                y,
+                fit_intercept=self.fit_intercept,
+                copy=self.copy_X,
+                sample_weight=sample_weight,
+            )
+            if sample_weight is not None:
+                # Sample weight can be implemented via a simple rescaling.
+                X, y, _ = _rescale_data(X, y, sample_weight)
 
         self.X_offset_ = X_offset_
         self.X_scale_ = X_scale_
