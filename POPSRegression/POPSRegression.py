@@ -64,7 +64,7 @@ class POPSRegression(BayesianRidge):
         must be one of 'sobol', 'latin', 'halton', 'grid', or 'uniform'.
     percentile_clipping : float, default=0.0
         Percentile to clip from each end of the distribution when determining the hypercube bounds, i.e. spans [x,100-x]. Value must be between 0 and 50, but in practice should be between 0.0 and 0.5 for robust bounds (i.e. 0% and 0.5%)
-    leverage_percentile : float, default=50.0
+    leverage_percentile : float, default=5.0
         To accelerate hypercube fitting, only consider points in leverage range [`leverage_percentile`,100.0]. Default is 50%.
     posterior : str, default='hypercube'
         Form of POPS parameter posterior. 
@@ -135,7 +135,7 @@ class POPSRegression(BayesianRidge):
         resample_density=1.0,
         resampling_method='uniform',
         percentile_clipping=0.0,
-        leverage_percentile=50.0,
+        leverage_percentile=5.0,
         posterior='hypercube',
     ):
         super().__init__(
@@ -491,34 +491,40 @@ class POPSRegression(BayesianRidge):
         --------
         y_mean : array-like of shape (n_samples,)
             The predicted mean values.
-        y_std : array-like of shape (n_samples,)
-            The predicted standard deviation (uncertainty) for each prediction.
-        y_max : array-like of shape (n_samples,), optional
-            The upper bound of the prediction interval. Only returned if return_bounds is True.
+        y_std : array-like of shape (n_samples,), optional
+            The predicted standard deviation (uncertainty) for each prediction. Only returned if `return_std` is True
         y_min : array-like of shape (n_samples,), optional
-            The lower bound of the prediction interval. Only returned if return_bounds is True.
+            The lower bound of the prediction interval. Only returned if `return_bounds` is True.
+        y_max : array-like of shape (n_samples,), optional
+            The upper bound of the prediction interval. Only returned if `return_bounds` is True.
+        y_epistemic_std: array-like of shape (n_samples,), optional
+            The predicted epistemic standard deviation (uncertainty) for each prediction. Only returned if `return_ep_std` is True
         """
         if self.fit_intercept_flag:
             X = np.hstack([X, np.ones((X.shape[0], 1))])
         
         y_mean = self._decision_function(X)
         
-        res = [y_mean] # y_mean
+        # Only return values if not None
+        res_dict = {'y_mean': y_mean, 
+                    'y_std':None,
+                    'y_min':None,
+                    'y_max':None,
+                    'y_ep_std':None}
         
-        # Follows rather odd convention of sklearn
-        if return_std or return_bounds or return_epistemic_std:
-            # we do NOT include aleatoric error !
+        if return_std or return_epistemic_std or return_bounds:
             y_epistemic_var = (np.dot(X, self.sigma_) * X).sum(axis=1)
-            y_max = (X@self.posterior_samples).max(1) + y_mean 
-            y_min = (X@self.posterior_samples).min(1) + y_mean 
-            
-            if return_std:
-                # Combine misspecification and epistemic uncertainty
-                y_misspecification_var = (np.dot(X, self.misspecification_sigma_) * X).sum(axis=1)
-                res += [np.sqrt(y_misspecification_var+ y_epistemic_var)] # y_std
-            if return_bounds:
-                res += [y_max,y_min]
-            if return_epistemic_std:
-                res += [y_epistemic_std] # y_epistemic_std
+            y_epistemic_std = np.sqrt(y_epistemic_var)
+
+        if return_std:
+            y_misspecification_var = (np.dot(X, self.misspecification_sigma_) * X).sum(axis=1)
+            res_dict['y_std'] = np.sqrt(y_misspecification_var+ y_epistemic_var)
         
-        return tuple(res)
+        if return_epistemic_std:
+            res_dict['y_ep_std'] = y_epistemic_std
+    
+        if return_bounds:
+            res_dict['y_min'] = (X@self.posterior_samples).min(1) + y_mean - 2.0*y_epistemic_std
+            res_dict['y_max'] = (X@self.posterior_samples).max(1) + y_mean + 2.0*y_epistemic_std
+        
+        return tuple(v for v in res_dict.values() if v is not None)

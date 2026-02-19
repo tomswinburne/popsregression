@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "POPSRegression"
-version = "0.3.6"
+version = "0.3.7"
 description = "Bayesian regression for low-noise data using POPS algorithm"
 authors = [
     {name = "Thomas D Swinburne", email = "thomas.swinburne@cnrs.fr"},
