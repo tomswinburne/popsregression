@@ -1,4 +1,4 @@
-popsregression - POPS Regression for scikit-learn
+popsregression
 =================================================
 
 ![tests](https://github.com/tomswinburne/popsregression/actions/workflows/python-app.yml/badge.svg)
@@ -9,45 +9,19 @@ popsregression - POPS Regression for scikit-learn
 package providing `POPSRegression`, a Bayesian regression method for low-noise
 data that accounts for model misspecification uncertainty.
 
-From the paper:
+**Try it out!** [online demo from Kermode group](https://kermodegroup.github.io/demos/regression-demo.html) comparing multiple regression schemes.
 
-> *Parameter uncertainties for imperfect surrogate models in the low-noise regime*
->
-> TD Swinburne and D Perez, [Machine Learning: Science and Technology 2025](http://iopscience.iop.org/article/10.1088/2632-2153/ad9fce)
-
-```bibtex
-@article{swinburne2025,
-    author={Swinburne, Thomas and Perez, Danny},
-    title={Parameter uncertainties for imperfect surrogate models in the low-noise regime},
-    journal={Machine Learning: Science and Technology},
-    doi={10.1088/2632-2153/ad9fce},
-    year={2025}
-}
-```
-
-## What is POPSRegression?
-
-**Bayesian regression for low-noise data (vanishing aleatoric uncertainty).**
-
+## Misspecification-aware Bayesian regression 
 Standard Bayesian regression (e.g. `BayesianRidge`) estimates epistemic and
-aleatoric uncertainties. In the low-noise limit, weight uncertainties
-(`sigma_`) are significantly underestimated as they only capture epistemic
-uncertainty, which decays with increasing data. Any remaining error is
-attributed to aleatoric noise (`alpha_`), which is erroneous in low-noise
-settings.
+aleatoric uncertainties, but provably ignore model misspecification- errors arising from limited model form (see example below). In the low-noise (weak aleatoric / near-deterministic) limit, weight uncertainties (`sigma_`) are significantly underestimated as they only capture epistemic uncertainty, which decays with increasing data. Any remaining error is attributed to aleatoric noise (`alpha_`), which is erroneous in low-noise settings.
 
-`POPSRegression` corrects this by estimating **misspecification uncertainty**
-from Pointwise Optimal Parameter Sets (POPS) — the parameter perturbations
-that would fit each training point exactly. The result is wider, more honest
-uncertainty estimates that properly cover the true function, even when the
-model class cannot perfectly represent the target.
+`POPSRegression` efficiently estimates **model misspecification uncertainty**
+via the Pointwise Optimal Parameter Sets (POPS) algorithm, finidng parameter perturbations that would fit each training point exactly. 
+The result is wider, more honest uncertainty estimates that properly cover the true function, even when the model class cannot perfectly represent the target.
 
-This is particularly relevant in computational science, where surrogate models
-are fit to near-deterministic simulation data and the model is structurally
-unable to capture the target function exactly.
+The misspecified, near-deterministic regression problem that `POPSRegression` addresses is particularly relevant to the fitting of surrogate simulation models in computational science, i.e. interatomic potentials,where by construction the optimal surrogate model is structurally unable to capture the target function exactly.
 
 ## Example
-
 Fitting a quartic polynomial (P=5 parameters) to a complex oscillatory function with N=10, 50, 500 training points. Top row: BayesianRidge epistemic uncertainty vanishes with more data. Bottom rows: POPS correctly maintains uncertainty where the polynomial deviates from the truth.
 
 ![Example comparison of BayesianRidge vs POPS uncertainty](example_image.png)
@@ -66,23 +40,21 @@ pip install popsregression
 
 ```python
 from popsregression import POPSRegression
-from sklearn.preprocessing import PolynomialFeatures
-import numpy as np
 
 X_train, X_test, y_train, y_test = ...
 
-# Fit POPS Regression with Sobol resampling
-model = POPSRegression(resampling_method='sobol', resample_density=1.0)
+# Fit POPSRegression
+# fit_intercept=False by default
+model = POPSRegression() 
 model.fit(X_train, y_train)
 
-# Predict with combined (misspecification + epistemic) uncertainty
+# Prediction with misspecification & epistemic uncertainty
 y_pred, y_std = model.predict(X_test, return_std=True)
 
 # Also return min/max bounds over the posterior
 y_pred, y_std, y_max, y_min = model.predict(
     X_test, return_std=True, return_bounds=True
 )
-
 # Also return epistemic-only uncertainty separately
 y_pred, y_std, y_max, y_min, y_epistemic_std = model.predict(
     X_test,
@@ -149,4 +121,20 @@ pytest -vsl popsregression
 pixi run test
 pixi run lint
 pixi run build-doc
+```
+
+## Citation
+
+> *Parameter uncertainties for imperfect surrogate models in the low-noise regime*
+>
+> TD Swinburne and D Perez, [Machine Learning: Science and Technology 2025](http://iopscience.iop.org/article/10.1088/2632-2153/ad9fce)
+
+```bibtex
+@article{swinburne2025,
+    author={Swinburne, Thomas and Perez, Danny},
+    title={Parameter uncertainties for imperfect surrogate models in the low-noise regime},
+    journal={Machine Learning: Science and Technology},
+    doi={10.1088/2632-2153/ad9fce},
+    year={2025}
+}
 ```
