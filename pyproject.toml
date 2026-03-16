@@ -38,7 +38,7 @@ Issues = "https://github.com/tomswinburne/popsregression/issues"
 py-modules = ["POPSRegression"]
 
 [tool.setuptools.packages.find]
-where = ["."]
+include = ["popsregression*"]
 
 [tool.setuptools_scm]
 version_file = "popsregression/_version.py"
