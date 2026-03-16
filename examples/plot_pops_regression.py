@@ -90,9 +90,7 @@ for ax, n_samples in zip(axes, train_sizes):
     br = BayesianRidge(fit_intercept=False)
     br.fit(X_train, y_train)
     br_pred = br.predict(X_test)
-    br_epistemic_std = np.sqrt(
-        np.sum(np.dot(X_test, br.sigma_) * X_test, axis=1)
-    )
+    br_epistemic_std = np.sqrt(np.sum(np.dot(X_test, br.sigma_) * X_test, axis=1))
 
     # Plot
     ax.fill_between(

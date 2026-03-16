@@ -115,9 +115,7 @@ def test_posterior_types(posterior):
 # --- Resampling methods ---
 
 
-@pytest.mark.parametrize(
-    "method", ["uniform", "sobol", "latin", "halton"]
-)
+@pytest.mark.parametrize("method", ["uniform", "sobol", "latin", "halton"])
 def test_resampling_methods(method):
     X, y, _ = _make_low_noise_data()
     model = POPSRegression(resampling_method=method).fit(X, y)
@@ -183,16 +181,12 @@ def test_fit_intercept_get_params_consistency():
 
 def test_invalid_posterior():
     with pytest.raises(ValueError):
-        POPSRegression(posterior="invalid").fit(
-            *_make_low_noise_data()[:2]
-        )
+        POPSRegression(posterior="invalid").fit(*_make_low_noise_data()[:2])
 
 
 def test_invalid_resampling_method():
     with pytest.raises(ValueError):
-        POPSRegression(resampling_method="invalid").fit(
-            *_make_low_noise_data()[:2]
-        )
+        POPSRegression(resampling_method="invalid").fit(*_make_low_noise_data()[:2])
 
 
 # --- sample_weight ---
@@ -224,9 +218,7 @@ def test_compute_score():
 @pytest.mark.parametrize("leverage_percentile", [0.0, 25.0, 75.0])
 def test_leverage_percentile(leverage_percentile):
     X, y, _ = _make_low_noise_data()
-    model = POPSRegression(
-        leverage_percentile=leverage_percentile
-    ).fit(X, y)
+    model = POPSRegression(leverage_percentile=leverage_percentile).fit(X, y)
     y_pred = model.predict(X)
     assert y_pred.shape == (X.shape[0],)
 
