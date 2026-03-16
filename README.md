@@ -104,9 +104,9 @@ pipe.fit(X_train, y_train)
 y_pred = pipe.predict(X_test)
 ```
 
-## Documentation
+## scikit-learn style documentation
 
-Full documentation: https://tomswinburne.github.io/popsregression
+https://tomswinburne.github.io/popsregression
 
 ## Development
 
