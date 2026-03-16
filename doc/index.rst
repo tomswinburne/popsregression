@@ -9,8 +9,8 @@ POPS Regression
 **Date**: |today| **Version**: |version|
 
 **Useful links**:
-`Source Repository <https://github.com/tomswinburne/sklearn-popsregression>`__ |
-`Issues & Ideas <https://github.com/tomswinburne/sklearn-popsregression/issues>`__
+`Source Repository <https://github.com/tomswinburne/POPS-Regression>`__ |
+`Issues & Ideas <https://github.com/tomswinburne/POPS-Regression/issues>`__
 
 Bayesian regression for low-noise data with misspecification uncertainty
 estimation using the POPS (Pointwise Optimal Parameter Sets) algorithm.

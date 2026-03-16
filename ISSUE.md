@@ -4,7 +4,7 @@
 
 **popsregression** provides `POPSRegression`, a scikit-learn compatible Bayesian regression estimator for low-noise data that accounts for model misspecification uncertainty using the POPS (Pointwise Optimal Parameter Sets) algorithm.
 
-**Repository**: https://github.com/tomswinburne/sklearn-popsregression
+**Repository**: https://github.com/tomswinburne/POPS-Regression
 
 ## What does it do?
 
