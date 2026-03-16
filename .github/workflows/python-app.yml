@@ -8,6 +8,10 @@ on:
     branches:
       - main
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     strategy:
@@ -17,9 +21,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - uses: prefix-dev/setup-pixi@v0.8.1
         with:
-          pixi-version: v0.23.0
+          pixi-version: v0.41.4
           environments: ${{ matrix.environment }}
           frozen: false
 
