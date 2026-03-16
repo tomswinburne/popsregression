@@ -1,9 +1,9 @@
 popsregression - POPS Regression for scikit-learn
 =================================================
 
-![tests](https://github.com/tomswinburne/POPS-Regression/actions/workflows/python-app.yml/badge.svg)
-[![codecov](https://codecov.io/gh/tomswinburne/POPS-Regression/graph/badge.svg?token=L0XPWwoPLw)](https://codecov.io/gh/tomswinburne/POPS-Regression)
-![doc](https://github.com/tomswinburne/POPS-Regression/actions/workflows/deploy-gh-pages.yml/badge.svg)
+![tests](https://github.com/tomswinburne/popsregression/actions/workflows/python-app.yml/badge.svg)
+[![codecov](https://codecov.io/gh/tomswinburne/popsregression/graph/badge.svg?token=L0XPWwoPLw)](https://codecov.io/gh/tomswinburne/popsregression)
+![doc](https://github.com/tomswinburne/popsregression/actions/workflows/deploy-gh-pages.yml/badge.svg)
 
 **popsregression** is a [scikit-learn](https://scikit-learn.org) compatible
 package providing `POPSRegression`, a Bayesian regression method for low-noise
@@ -134,7 +134,7 @@ y_pred = pipe.predict(X_test)
 
 ## Documentation
 
-Full documentation: https://tomswinburne.github.io/POPS-Regression
+Full documentation: https://tomswinburne.github.io/popsregression
 
 ## Development
 

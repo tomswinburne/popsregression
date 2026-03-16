@@ -31,8 +31,8 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/tomswinburne/POPS-Regression"
-Issues = "https://github.com/tomswinburne/POPS-Regression/issues"
+Homepage = "https://github.com/tomswinburne/popsregression"
+Issues = "https://github.com/tomswinburne/popsregression/issues"
 
 [tool.setuptools_scm]
 version_file = "popsregression/_version.py"
