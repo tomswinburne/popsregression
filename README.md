@@ -46,6 +46,14 @@ This is particularly relevant in computational science, where surrogate models
 are fit to near-deterministic simulation data and the model is structurally
 unable to capture the target function exactly.
 
+## Example
+
+Fitting a quartic polynomial (P=5 parameters) to a complex oscillatory function with N=10, 50, 500 training points. Top row: BayesianRidge epistemic uncertainty vanishes with more data. Bottom rows: POPS correctly maintains uncertainty where the polynomial deviates from the truth.
+
+![Example comparison of BayesianRidge vs POPS uncertainty](example_image.png)
+
+See the [SimpleExample.ipynb](SimpleExample.ipynb) notebook for a runnable version.
+
 ## Installation
 
 ```bash
