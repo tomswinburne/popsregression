@@ -4,7 +4,6 @@ popsregression
 **Modified fork of [popsregression](https://pops-uq.github.io), implementing PAC-Bayes regularization**
 
 ## Installation
-**This repo has lo
 ```bash
 # clone repository
 cd /this/repository
