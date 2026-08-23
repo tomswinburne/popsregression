@@ -1,40 +1,14 @@
 popsregression
 =================================================
-**Modified fork of popsregression, implementing PAC-Bayes regularization**
 
-**popsregression** is a [scikit-learn](https://scikit-learn.org) compatible
-package providing `POPSRegression`, a Bayesian regression method for low-noise
-data that accounts for model misspecification uncertainty.
-
-**paper** *Parameter uncertainties for imperfect surrogate models in the low-noise regime* [Machine Learning: Science and Technology 2025](http://iopscience.iop.org/article/10.1088/2632-2153/ad9fce)
-
-**Documentation** 📖 [POPS-UQ.github.io/popsregression](https://POPS-UQ.github.io/popsregression) — API reference and usage for this Python package
-
-**The POPS method** 🔬 [pops-uq.github.io](https://pops-uq.github.io) — concepts, algorithm, tutorials and the [Julia implementation](https://github.com/POPS-UQ/POPSRegression.jl)
-
-**Try it out!** [online demo from Kermode group](https://kermodegroup.github.io/demos/regression-demo.html) comparing multiple regression schemes.
-
-## Misspecification-aware Bayesian regression 
-Standard Bayesian regression (e.g. `BayesianRidge`) estimates epistemic and
-aleatoric uncertainties, but provably ignore model misspecification- errors arising from limited model form (see example below). In the low-noise (weak aleatoric / near-deterministic) limit, weight uncertainties (`sigma_`) are significantly underestimated as they only capture epistemic uncertainty, which decays with increasing data. Any remaining error is attributed to aleatoric noise (`alpha_`), which is erroneous in low-noise settings.
-
-`POPSRegression` efficiently estimates **model misspecification uncertainty**
-via the Pointwise Optimal Parameter Sets (POPS) algorithm, finidng parameter perturbations that would fit each training point exactly. 
-The result is wider, more honest uncertainty estimates that properly cover the true function, even when the model class cannot perfectly represent the target.
-
-The misspecified, near-deterministic regression problem that `POPSRegression` addresses is particularly relevant to the fitting of surrogate simulation models in computational science, i.e. interatomic potentials,where by construction the optimal surrogate model is structurally unable to capture the target function exactly.
-
-## Example
-Fitting a quartic polynomial (P=5 parameters) to a complex oscillatory function with N=10 (top row) and N=100 (bottom row) training points. Columns are BayesianRidge, the POPS hypercube, the POPS ellipse, and the PAC-Bayes POPS ellipse; the orange band is the 95.45% interval, the grey band the max/min posterior envelope, and each panel reports the fraction of the truth covered by the outer band. BayesianRidge epistemic uncertainty vanishes with more data, while POPS maintains uncertainty where the polynomial deviates from the truth.
-
-![Example comparison of BayesianRidge vs POPS uncertainty](https://raw.githubusercontent.com/POPS-UQ/popsregression/main/examples/example_polynomial.png)
-
-The figure is produced by [examples/example_polynomial.py](examples/example_polynomial.py).
+**Modified fork of [popsregression](https://pops-uq.github.io), implementing PAC-Bayes regularization**
 
 ## Installation
-
+**This repo has lo
 ```bash
-pip install popsregression
+# clone repository
+cd /this/repository
+pip install -e .
 ```
 
 **Dependencies**: scikit-learn >= 1.6.1, scipy >= 1.6.0, numpy >= 1.20.0
@@ -46,25 +20,13 @@ from popsregression import POPSRegression
 
 X_train, X_test, y_train, y_test = ...
 
-# Fit POPSRegression
-# fit_intercept=False by default
-model = POPSRegression()
+# Fit POPSRegression (fit_intercept=False by default)
+model = POPSRegression(posterior="ellipsoid", pac_bayes=True)
 model.fit(X_train, y_train)
 
-# Prediction with misspecification & epistemic uncertainty
-y_pred, y_std = model.predict(X_test, return_std=True)
-
-# Also return min/max bounds over the posterior
+# Prediction with misspecification-aware std and max/min
 y_pred, y_std, y_max, y_min = model.predict(
     X_test, return_std=True, return_bounds=True
-)
-
-# Also return epistemic-only uncertainty separately
-y_pred, y_std, y_max, y_min, y_epistemic_std = model.predict(
-    X_test,
-    return_std=True,
-    return_bounds=True,
-    return_epistemic_std=True,
 )
 ```
 
@@ -82,15 +44,6 @@ y_pred, y_std, y_max, y_min, y_epistemic_std = model.predict(
 | `mode_threshold` | `1e-8` | Eigenvalue threshold for hypercube dimensionality |
 | `percentile_clipping` | `0.0` | Percentile to clip from hypercube bounds (0–50) |
 
-All `BayesianRidge` parameters (`max_iter`, `tol`, `alpha_1`, `alpha_2`,
-`lambda_1`, `lambda_2`, `fit_intercept`, etc.) are also supported.
-
-> [!WARNING]
-> `leverage_percentile` is deprecated since 0.5 and will be removed in 0.7.
-> Training points are now selected by relative residual magnitude: use
-> `minimum_relative_error` instead (`leverage_percentile=0.0` becomes
-> `minimum_relative_error=0.0`). Passing it raises a `FutureWarning` and has
-> no effect.
 
 ## Key attributes (after fitting)
 
@@ -103,35 +56,6 @@ All `BayesianRidge` parameters (`max_iter`, `tol`, `alpha_1`, `alpha_2`,
 | `ellipsoid_` | The fitted ellipsoid; only with `posterior='ellipsoid'` |
 | `bound_`, `kl_`, `empirical_H_`, `gamma_` | PAC-Bayes certificate; only with `pac_bayes=True` |
 | `alpha_` | Estimated noise precision (not used for prediction) |
-
-## Ellipsoid posteriors and the PAC-Bayes layer
-
-The **uniform-ellipsoid** posterior is fitted by directly optimizing the
-empirical generalization error of the exact projected-ball predictive
-pushforward. The POPS covering condition enters as a log-barrier, so the fit is
-an interior-point method for POPS coverage. `pac_bayes=True` adds a
-hierarchical PAC-Bayes layer on top, giving closed-form KL and bound components
-via a Laplace hyperposterior — no sampling anywhere.
-
-```python
-from popsregression import POPSRegression
-
-# Defaults: baseline='pops', optimize_center=False (mean = POPS pre-fit)
-model = POPSRegression(posterior="ellipsoid")
-model.fit(X_train, y_train)
-
-# The PAC-Bayes layer is a flag on the same estimator
-certified = POPSRegression(posterior="ellipsoid", pac_bayes=True)
-certified.fit(X_train, y_train)
-certified.bound_, certified.kl_    # closed-form PAC-Bayes certificate
-
-# std = pushforward std sqrt(v/(P+2)); bounds = ellipse support
-# mean +/- sqrt(v) (with pac_bayes=True: the max/min over the 2-sigma
-# hyperposterior ensemble of ellipses, strictly broader)
-y_pred, y_std, y_max, y_min = model.predict(
-    X_test, return_std=True, return_bounds=True
-)
-```
 
 | Parameter | Default | Description |
 |---|---|---|
@@ -183,7 +107,6 @@ uv run --group lint black --check popsregression examples
 uv run --group doc mkdocs serve                       # docs at localhost:8000
 uv run --extra examples examples/example_polynomial.py  # example figures
 ```
-
 Without uv, `pip install -e ".[examples]"` and run the tools directly.
 
 ## AI Usage
