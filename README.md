@@ -1,9 +1,6 @@
 popsregression
 =================================================
-
-[![tests](https://github.com/POPS-UQ/popsregression/actions/workflows/python-app.yml/badge.svg)](https://github.com/POPS-UQ/popsregression/actions/workflows/python-app.yml)
-[![codecov](https://codecov.io/gh/POPS-UQ/popsregression/graph/badge.svg?token=L0XPWwoPLw)](https://codecov.io/gh/POPS-UQ/popsregression)
-[![docs](https://img.shields.io/badge/docs-POPS--UQ.github.io%2Fpopsregression-blue)](https://POPS-UQ.github.io/popsregression)
+**Modified fork of popsregression, implementing PAC-Bayes regularization**
 
 **popsregression** is a [scikit-learn](https://scikit-learn.org) compatible
 package providing `POPSRegression`, a Bayesian regression method for low-noise
