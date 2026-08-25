@@ -64,14 +64,6 @@ class POPSRegression(BayesianRidge):
         Inverse scale (rate) parameter for the Gamma distribution prior
         over ``lambda_``.
 
-    alpha_init : float, default=None
-        Initial value for ``alpha_`` (precision of the noise). If None,
-        ``alpha_init`` is ``1 / Var(y)``.
-
-    lambda_init : float, default=None
-        Initial value for ``lambda_`` (precision of the weights). If None,
-        ``lambda_init`` is 1.
-
     compute_score : bool, default=False
         If True, compute the log marginal likelihood at each step.
 
@@ -79,12 +71,6 @@ class POPSRegression(BayesianRidge):
         Whether to fit an intercept. If True, a constant column is appended
         to X (rather than centering) so that the intercept participates in
         the POPS posterior estimation.
-
-    copy_X : bool, default=True
-        If True, X will be copied; else, it may be overwritten.
-
-    verbose : bool, default=False
-        Verbose mode when fitting the model.
 
     mode_threshold : float, default=1e-8
         Eigenvalue threshold (relative to max) for determining the effective
@@ -285,12 +271,8 @@ class POPSRegression(BayesianRidge):
         alpha_2=1.0e-6,
         lambda_1=1.0e-6,
         lambda_2=1.0e-6,
-        alpha_init=None,
-        lambda_init=None,
         compute_score=False,
         fit_intercept=False,
-        copy_X=True,
-        verbose=False,
         mode_threshold=1.0e-8,
         resample_density=1.0,
         resampling_method="uniform",
@@ -309,12 +291,8 @@ class POPSRegression(BayesianRidge):
             alpha_2=alpha_2,
             lambda_1=lambda_1,
             lambda_2=lambda_2,
-            alpha_init=alpha_init,
-            lambda_init=lambda_init,
             compute_score=compute_score,
             fit_intercept=fit_intercept,
-            copy_X=copy_X,
-            verbose=verbose,
         )
         self.mode_threshold = mode_threshold
         self.resample_density = resample_density

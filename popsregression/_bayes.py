@@ -3,8 +3,10 @@
 The evidence-maximization linear model that POPS builds on, vendored so this
 package depends only on numpy and scipy. The algorithm is scikit-learn's
 :class:`sklearn.linear_model.BayesianRidge`, reproduced unchanged so results
-match it exactly; only the sparse-input and array-API branches are dropped,
-since this package accepts dense numpy input only.
+match it exactly at the defaults. The sparse-input and array-API branches are
+dropped, since this package accepts dense numpy input only, as are the
+``alpha_init``, ``lambda_init``, ``copy_X`` and ``verbose`` parameters, which
+POPS never varied.
 
 Adapted from scikit-learn (BSD-3-Clause).
 """
@@ -163,23 +165,11 @@ class BayesianRidge(RegressorMixin, LinearModel, BaseEstimator):
     lambda_2 : float, default=1e-6
         Inverse scale (rate) parameter of the Gamma prior over ``lambda_``.
 
-    alpha_init : float, default=None
-        Initial value for ``alpha_``. If None, ``1 / Var(y)`` is used.
-
-    lambda_init : float, default=None
-        Initial value for ``lambda_``. If None, 1 is used.
-
     compute_score : bool, default=False
         Whether to record the log marginal likelihood at each iteration.
 
     fit_intercept : bool, default=True
         Whether to center the data and fit an intercept.
-
-    copy_X : bool, default=True
-        If True, ``X`` will be copied; else, it may be overwritten.
-
-    verbose : bool, default=False
-        Verbose mode when fitting the model.
 
     Attributes
     ----------
@@ -215,12 +205,8 @@ class BayesianRidge(RegressorMixin, LinearModel, BaseEstimator):
         "alpha_2": [Interval(Real, 0, None, closed="left")],
         "lambda_1": [Interval(Real, 0, None, closed="left")],
         "lambda_2": [Interval(Real, 0, None, closed="left")],
-        "alpha_init": [None, Interval(Real, 0, None, closed="neither")],
-        "lambda_init": [None, Interval(Real, 0, None, closed="neither")],
         "compute_score": ["boolean"],
         "fit_intercept": ["boolean"],
-        "copy_X": ["boolean"],
-        "verbose": ["verbose"],
     }
 
     def __init__(
@@ -232,12 +218,8 @@ class BayesianRidge(RegressorMixin, LinearModel, BaseEstimator):
         alpha_2=1.0e-6,
         lambda_1=1.0e-6,
         lambda_2=1.0e-6,
-        alpha_init=None,
-        lambda_init=None,
         compute_score=False,
         fit_intercept=True,
-        copy_X=True,
-        verbose=False,
     ):
         self.max_iter = max_iter
         self.tol = tol
@@ -245,12 +227,8 @@ class BayesianRidge(RegressorMixin, LinearModel, BaseEstimator):
         self.alpha_2 = alpha_2
         self.lambda_1 = lambda_1
         self.lambda_2 = lambda_2
-        self.alpha_init = alpha_init
-        self.lambda_init = lambda_init
         self.compute_score = compute_score
         self.fit_intercept = fit_intercept
-        self.copy_X = copy_X
-        self.verbose = verbose
 
     @_fit_context(prefer_skip_nested_validation=True)
     def fit(self, X, y, sample_weight=None):
@@ -288,7 +266,7 @@ class BayesianRidge(RegressorMixin, LinearModel, BaseEstimator):
             X,
             y,
             fit_intercept=self.fit_intercept,
-            copy=self.copy_X,
+            copy=True,
             sample_weight=sample_weight,
         )
 
@@ -304,18 +282,13 @@ class BayesianRidge(RegressorMixin, LinearModel, BaseEstimator):
         eps = np.finfo(np.float64).eps
         # Add `eps` in the denominator to omit division by zero if `np.var(y)`
         # is zero.
-        alpha_ = self.alpha_init
-        lambda_ = self.lambda_init
-        if alpha_ is None:
-            alpha_ = 1.0 / (np.var(y) + eps)
-        if lambda_ is None:
-            lambda_ = 1.0
+        alpha_ = 1.0 / (np.var(y) + eps)
+        lambda_ = 1.0
 
         # Avoid unintended type promotion to float64 with numpy 2
         alpha_ = np.asarray(alpha_, dtype=dtype)
         lambda_ = np.asarray(lambda_, dtype=dtype)
 
-        verbose = self.verbose
         lambda_1 = self.lambda_1
         lambda_2 = self.lambda_2
         alpha_1 = self.alpha_1
@@ -349,8 +322,6 @@ class BayesianRidge(RegressorMixin, LinearModel, BaseEstimator):
 
             # Check for convergence
             if iter_ != 0 and np.sum(np.abs(coef_old_ - coef_)) < self.tol:
-                if verbose:
-                    print("Convergence after ", str(iter_), " iterations")
                 break
             coef_old_ = np.copy(coef_)
 

@@ -110,18 +110,6 @@ class _RandomStates(_Constraint):
         return "an int, a RandomState instance or None"
 
 
-class _Verbose(_Constraint):
-    """Constraint satisfied by a verbosity level: a bool or non-negative int."""
-
-    def is_satisfied_by(self, val):
-        if isinstance(val, (bool, np.bool_)):
-            return True
-        return isinstance(val, Integral) and val >= 0
-
-    def __str__(self):
-        return "a non-negative int or a boolean"
-
-
 class Interval(_Constraint):
     """Constraint satisfied by a number within an interval.
 
@@ -243,8 +231,6 @@ def make_constraint(constraint):
             return _ArrayLikes()
         if constraint == "random_state":
             return _RandomStates()
-        if constraint == "verbose":
-            return _Verbose()
         raise ValueError(f"Unknown constraint alias: {constraint!r}")
     if isinstance(constraint, type):
         return _InstancesOf(constraint)

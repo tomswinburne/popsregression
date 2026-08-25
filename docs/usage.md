@@ -88,10 +88,9 @@ than a tuple.
 
 ## Choosing parameters
 
-All `BayesianRidge` parameters (`max_iter`, `tol`, `alpha_1`, `alpha_2`,
-`lambda_1`, `lambda_2`, `alpha_init`, `lambda_init`, `compute_score`,
-`fit_intercept`, `copy_X`, `verbose`) are accepted and forwarded. The
-POPS-specific parameters are:
+The Bayesian ridge parameters (`max_iter`, `tol`, `alpha_1`, `alpha_2`,
+`lambda_1`, `lambda_2`, `compute_score`, `fit_intercept`) are accepted and
+forwarded. The POPS-specific parameters are:
 
 | Parameter | Default | Notes |
 |---|---|---|
