@@ -17,17 +17,18 @@ from numbers import Integral, Real
 import numpy as np
 from scipy.linalg import eigh
 from scipy.optimize import minimize
-from sklearn.base import BaseEstimator, RegressorMixin, _fit_context
-from sklearn.utils import check_random_state
-from sklearn.utils._param_validation import Interval, Options, StrOptions
-from sklearn.utils.validation import (
+
+from ._base import (
+    BaseEstimator,
+    RegressorMixin,
     _check_sample_weight,
     check_is_fitted,
+    check_random_state,
     validate_data,
 )
-
 from ._pops import POPSRegression
 from ._projected_ball import log_norm_constant, smooth_log
+from ._validation import Interval, Options, StrOptions, _fit_context
 
 
 def _unpack(psi, n_dim):

@@ -13,7 +13,6 @@ description = "Bayesian regression for low-noise data with misspecification unce
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
-  "scikit-learn>=1.6.1",
   "scipy>=1.6.0",
   "numpy>=1.20.0",
 ]
@@ -52,6 +51,9 @@ lint = [
 test = [
   "pytest",
   "pytest-cov",
+  # Not a runtime dependency: only `tests/test_sklearn_compat.py` needs it, to
+  # verify that the estimators still satisfy the scikit-learn API.
+  "scikit-learn>=1.6.1",
 ]
 doc = [
   "black",  # used by mkdocstrings to format rendered signatures
@@ -114,4 +116,7 @@ doctest_optionflags = "NORMALIZE_WHITESPACE"
 [project.optional-dependencies]
 examples = [
     "matplotlib",
+    # The example scripts plot BayesianRidge as a baseline and build their
+    # design matrices with PolynomialFeatures.
+    "scikit-learn>=1.6.1",
 ]

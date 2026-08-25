@@ -10,10 +10,6 @@ import warnings
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_array_less
-from sklearn.base import clone
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import PolynomialFeatures
-from sklearn.utils.estimator_checks import parametrize_with_checks
 
 from popsregression import POPSRegression
 from popsregression._ellipse import _EllipsoidPosterior
@@ -31,9 +27,8 @@ def _make_misspecified_data(n_samples, seed=42, degree=4):
         np.sort(np.append(rng.uniform(-1, 1, n_samples), np.linspace(-1, 1, 2))) * 10
     )
     x_dense = np.linspace(-1.1, 1.1, 51) * 10
-    poly = PolynomialFeatures(degree=degree, include_bias=True)
-    X_train = poly.fit_transform(x_train.reshape(-1, 1))
-    X_dense = poly.fit_transform(x_dense.reshape(-1, 1))
+    X_train = np.vander(x_train, degree + 1, increasing=True)
+    X_dense = np.vander(x_dense, degree + 1, increasing=True)
     return X_train, _target_function(x_train), X_dense, _target_function(x_dense)
 
 
@@ -195,26 +190,6 @@ def test_predictive_std_anchored_to_pops():
     _, pops_std = pops.predict(X_dense, return_std=True)
     ratio = np.mean(ellipse_std) / np.mean(pops_std)
     assert 1.0 / 3.0 < ratio < 3.0
-
-
-# --- sklearn compliance (test 6) ---
-
-
-@parametrize_with_checks([_EllipsoidPosterior()])
-def test_sklearn_compatible(estimator, check):
-    check(estimator)
-
-
-def test_pipeline_polynomial_features():
-    x = np.linspace(-2, 2, 40)
-    y = np.sin(2 * x) * x
-    pipe = make_pipeline(
-        PolynomialFeatures(degree=3),
-        _EllipsoidPosterior(random_state=0),
-    )
-    pipe.fit(x.reshape(-1, 1), y)
-    y_pred = pipe.predict(x.reshape(-1, 1))
-    assert y_pred.shape == (40,)
 
 
 @pytest.mark.parametrize("fit_intercept", [False, True])
@@ -547,17 +522,6 @@ def test_low_n_conservatism_recipe():
     assert hw_recipe < hw_box  # ...but far less than the box support
 
 
-# --- Cloning ---
-
-
-def test_clone_and_get_set_params():
-    model = _EllipsoidPosterior(rank=4, baseline="ridge", pac_bayes=True)
-    cloned = clone(model)
-    assert cloned.get_params() == model.get_params()
-    model.set_params(rank=8, delta=1e-2)
-    assert model.rank == 8 and model.delta == 1e-2
-
-
 # --- Scaling: O(N P r) fit without dense P x P optimization ---
 
 
@@ -636,12 +600,3 @@ def test_pac_bayes_broadens_the_bare_ellipsoid():
     _, bare_std = bare.predict(X_test, return_std=True)
     _, pac_std = pac.predict(X_test, return_std=True)
     assert_array_less(bare_std, pac_std * (1.0 + 1e-12))
-
-
-def test_pac_bayes_is_a_tunable_parameter():
-    """pac_bayes is an ordinary parameter: cloned, settable, introspectable."""
-    model = POPSRegression(posterior="ellipsoid", pac_bayes=True, random_state=0)
-    assert model.get_params()["pac_bayes"] is True
-    assert clone(model).get_params() == model.get_params()
-    model.set_params(pac_bayes=False)
-    assert model.pac_bayes is False

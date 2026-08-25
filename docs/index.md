@@ -18,7 +18,7 @@ implementation — are documented at
 pip install popsregression
 ```
 
-Requires Python >= 3.9. Dependencies: `scikit-learn>=1.6.1`, `scipy>=1.6.0`,
+Requires Python >= 3.9. Dependencies: `scipy>=1.6.0`,
 `numpy>=1.20.0`.
 
 ## Quick start

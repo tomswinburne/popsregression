@@ -40,7 +40,12 @@ The figure is produced by [examples/example_polynomial.py](examples/example_poly
 pip install popsregression
 ```
 
-**Dependencies**: scikit-learn >= 1.6.1, scipy >= 1.6.0, numpy >= 1.20.0
+**Dependencies**: scipy >= 1.6.0, numpy >= 1.20.0
+
+scikit-learn is *not* required. `POPSRegression` follows the scikit-learn
+estimator API, so it still drops into scikit-learn pipelines and searches when
+you have scikit-learn installed -- but installing this package does not pull it
+in.
 
 ## Quick start
 
@@ -156,8 +161,9 @@ in the documentation, and
 
 ## Pipeline compatibility
 
-`POPSRegression` is fully compatible with scikit-learn pipelines and
-hyperparameter search:
+`POPSRegression` implements the scikit-learn estimator protocol without
+depending on scikit-learn, so it is fully compatible with scikit-learn
+pipelines and hyperparameter search when scikit-learn is installed:
 
 ```python
 from sklearn.pipeline import make_pipeline

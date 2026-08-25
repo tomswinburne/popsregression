@@ -226,7 +226,8 @@ parameter ensemble is `coef_[:, None] + model.posterior_samples_`.
 ## Pipelines and model selection
 
 `POPSRegression` clones, gets and sets parameters like any scikit-learn
-estimator, so it drops into pipelines and search:
+estimator -- without depending on scikit-learn -- so it drops into pipelines
+and search whenever scikit-learn is installed:
 
 ```python
 from sklearn.model_selection import GridSearchCV

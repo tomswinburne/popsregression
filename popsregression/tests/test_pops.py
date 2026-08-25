@@ -9,9 +9,6 @@ import warnings
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_array_less
-from sklearn.linear_model import BayesianRidge
-from sklearn.preprocessing import PolynomialFeatures
-from sklearn.utils.estimator_checks import parametrize_with_checks
 
 from popsregression import POPSRegression
 from popsregression._ellipse import _EllipsoidPosterior
@@ -23,10 +20,9 @@ def _make_low_noise_data(n_samples=50, n_features=5, noise=0.01, seed=42):
     x = np.sort(rng.uniform(-1, 1, n_samples)) * 10
     f = lambda x: (x**3 + 0.01 * x**4) * 0.1 + np.sin(x) * x * 10.0
 
-    poly = PolynomialFeatures(degree=n_features - 1, include_bias=True)
-    X = poly.fit_transform(x.reshape(-1, 1))
+    X = np.vander(x, n_features, increasing=True)
     y = f(x) + noise * rng.randn(n_samples)
-    return X, y, poly
+    return X, y, None
 
 
 # --- Basic functionality ---
@@ -324,20 +320,6 @@ def test_misspecification_sigma_larger_than_epistemic():
     assert misspec_trace > epistemic_trace
 
 
-def test_pops_wider_uncertainty_than_bayesian_ridge():
-    """POPS combined uncertainty should be wider than BayesianRidge
-    epistemic-only uncertainty for misspecified low-noise data."""
-    X, y, _ = _make_low_noise_data(n_samples=30, n_features=5, noise=0.001)
-
-    pops = POPSRegression().fit(X, y)
-    br = BayesianRidge(fit_intercept=False).fit(X, y)
-
-    _, pops_std = pops.predict(X, return_std=True)
-    br_epistemic_std = np.sqrt(np.sum(np.dot(X, br.sigma_) * X, axis=1))
-
-    assert np.mean(pops_std) > np.mean(br_epistemic_std)
-
-
 # --- fit_intercept ---
 
 
@@ -481,18 +463,6 @@ def test_no_warning_without_leverage_percentile():
 # --- Cloning and get_params/set_params ---
 
 
-def test_clone():
-    from sklearn.base import clone
-
-    model = POPSRegression(
-        posterior="ensemble",
-        resample_density=2.0,
-        minimum_relative_error=0.05,
-    )
-    cloned = clone(model)
-    assert cloned.get_params() == model.get_params()
-
-
 def test_get_set_params():
     model = POPSRegression()
     params = model.get_params()
@@ -503,11 +473,3 @@ def test_get_set_params():
     model.set_params(posterior="ensemble", resample_density=5.0)
     assert model.posterior == "ensemble"
     assert model.resample_density == 5.0
-
-
-# --- sklearn estimator checks ---
-
-
-@parametrize_with_checks([POPSRegression()])
-def test_sklearn_compatible(estimator, check):
-    check(estimator)

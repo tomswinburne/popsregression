@@ -63,16 +63,17 @@ itself, not through `posterior_options`; sample weights are passed to `fit`.
 
 ### Inherited methods
 
-`POPSRegression` subclasses
-[`BayesianRidge`](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.BayesianRidge.html)
-and inherits the standard scikit-learn estimator methods unchanged:
+`POPSRegression` subclasses a bundled Bayesian ridge regressor -- the
+evidence-maximization solver of
+[`BayesianRidge`](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.BayesianRidge.html),
+reimplemented on numpy and scipy alone so that scikit-learn is not a
+dependency -- and inherits the standard estimator methods:
 
 | Method | Description |
 |---|---|
 | `get_params(deep=True)` | Parameters of this estimator |
 | `set_params(**params)` | Set parameters of this estimator |
 | `score(X, y, sample_weight=None)` | Coefficient of determination R² of the prediction |
-| `get_metadata_routing()` | Metadata routing of this object |
 
 `score` uses the mean prediction only; uncertainty outputs are available
 through [`predict`](#predict).

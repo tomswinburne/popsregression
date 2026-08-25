@@ -14,16 +14,15 @@ from numbers import Real
 import numpy as np
 from scipy.linalg import eigh
 from scipy.stats import qmc
-from sklearn.base import _fit_context
-from sklearn.linear_model._base import _preprocess_data
-from sklearn.linear_model._bayes import BayesianRidge
-from sklearn.utils import check_random_state
-from sklearn.utils._param_validation import Hidden, Interval, StrOptions
-from sklearn.utils.validation import (
+
+from ._base import (
     _check_sample_weight,
     check_is_fitted,
+    check_random_state,
     validate_data,
 )
+from ._bayes import BayesianRidge, _preprocess_data
+from ._validation import Hidden, Interval, StrOptions, _fit_context
 
 
 class POPSRegression(BayesianRidge):
