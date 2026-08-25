@@ -19,7 +19,6 @@ from numbers import Integral, Real
 import numpy as np
 
 __all__ = [
-    "Hidden",
     "Interval",
     "InvalidParameterError",
     "Options",
@@ -205,21 +204,8 @@ class StrOptions(_Constraint):
         return f"a str among {{{opts}}}"
 
 
-class Hidden:
-    """Wrapper marking a constraint as not to be shown in error messages.
-
-    Used for values that are accepted but undocumented, such as the
-    ``'deprecated'`` sentinel of a parameter on its way out.
-    """
-
-    def __init__(self, constraint):
-        self.constraint = constraint
-
-
 def make_constraint(constraint):
     """Convert a constraint declaration into a ``_Constraint`` instance."""
-    if isinstance(constraint, Hidden):
-        return Hidden(make_constraint(constraint.constraint))
     if isinstance(constraint, _Constraint):
         return constraint
     if constraint is None:
@@ -265,18 +251,10 @@ def validate_parameter_constraints(parameter_constraints, params, caller_name):
             continue
 
         constraints = [make_constraint(c) for c in constraints]
-        if any(
-            (
-                c.constraint.is_satisfied_by(param_val)
-                if isinstance(c, Hidden)
-                else c.is_satisfied_by(param_val)
-            )
-            for c in constraints
-        ):
+        if any(c.is_satisfied_by(param_val) for c in constraints):
             continue
 
-        # Only the visible constraints appear in the message.
-        shown = [str(c) for c in constraints if not isinstance(c, Hidden)]
+        shown = [str(c) for c in constraints]
         if len(shown) == 1:
             expected = shown[0]
         else:

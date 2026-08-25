@@ -2465,7 +2465,7 @@ requires-dist = [
     { name = "matplotlib", marker = "extra == 'examples'" },
     { name = "numpy", specifier = ">=1.20.0" },
     { name = "scikit-learn", marker = "extra == 'examples'", specifier = ">=1.6.1" },
-    { name = "scipy", specifier = ">=1.6.0" },
+    { name = "scipy", specifier = ">=1.7.0" },
 ]
 provides-extras = ["examples"]
 

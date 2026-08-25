@@ -8,7 +8,6 @@ Bayesian regression for low-noise data accounting for model misspecification.
 #          Danny Perez <danny_perez@lanl.gov>
 # SPDX-License-Identifier: BSD-3-Clause
 
-import warnings
 from numbers import Real
 
 import numpy as np
@@ -21,8 +20,8 @@ from ._base import (
     check_random_state,
     validate_data,
 )
-from ._bayes import BayesianRidge, _preprocess_data
-from ._validation import Hidden, Interval, StrOptions, _fit_context
+from ._bayes import BayesianRidge, _preprocess_data, _rescale_data
+from ._validation import Interval, StrOptions, _fit_context
 
 
 class POPSRegression(BayesianRidge):
@@ -135,16 +134,6 @@ class POPSRegression(BayesianRidge):
         random state, which is the historical behaviour of the ``'uniform'``
         hypercube resampling.
 
-    leverage_percentile : float, default='deprecated'
-        Deprecated. Training points used to be selected by leverage score
-        percentile; they are now selected by residual magnitude through
-        ``minimum_relative_error``. Passing this parameter raises a
-        :class:`FutureWarning` and has no effect.
-
-        .. deprecated:: 0.5
-            ``leverage_percentile`` is deprecated and will be removed in
-            0.7. Use ``minimum_relative_error`` instead.
-
     Attributes
     ----------
     coef_ : ndarray of shape (n_features,)
@@ -256,10 +245,6 @@ class POPSRegression(BayesianRidge):
         "pac_bayes": ["boolean"],
         "posterior_options": [dict, None],
         "random_state": ["random_state"],
-        "leverage_percentile": [
-            Interval(Real, 0.0, 100.0, closed="left"),
-            Hidden(StrOptions({"deprecated"})),
-        ],
     }
 
     def __init__(
@@ -282,7 +267,6 @@ class POPSRegression(BayesianRidge):
         pac_bayes=False,
         posterior_options=None,
         random_state=None,
-        leverage_percentile="deprecated",
     ):
         super().__init__(
             max_iter=max_iter,
@@ -303,7 +287,6 @@ class POPSRegression(BayesianRidge):
         self.pac_bayes = pac_bayes
         self.posterior_options = posterior_options
         self.random_state = random_state
-        self.leverage_percentile = leverage_percentile
 
     @_fit_context(prefer_skip_nested_validation=True)
     def fit(self, X, y, sample_weight=None):
@@ -325,17 +308,6 @@ class POPSRegression(BayesianRidge):
         self : object
             Returns the instance itself.
         """
-        if not isinstance(self.leverage_percentile, str):
-            warnings.warn(
-                (
-                    "'leverage_percentile' was deprecated in 0.5 and will be "
-                    "removed in 0.7. Training points are now selected by residual "
-                    "magnitude: use 'minimum_relative_error' instead. The value "
-                    "passed to 'leverage_percentile' is ignored."
-                ),
-                FutureWarning,
-            )
-
         pops_fit_intercept = self.fit_intercept
         if self.fit_intercept:
             X = np.asarray(X)
@@ -354,8 +326,6 @@ class POPSRegression(BayesianRidge):
             else:
                 sw = None
 
-            # Note this rescales X and y by sqrt(sample_weight), so the
-            # pointwise corrections below live in the reweighted space.
             preprocess_result = _preprocess_data(
                 X_valid,
                 y_valid,
@@ -364,6 +334,16 @@ class POPSRegression(BayesianRidge):
                 sample_weight=sw,
             )
             X_pp, y_pp = preprocess_result[0], preprocess_result[1]
+
+            if sw is not None:
+                # Put the pointwise corrections in the reweighted space, the
+                # same space the mean fit above was solved in. Without this
+                # sample_weight reaches only the mean fit and is silently
+                # ignored by the misspecification posterior. The rescaling
+                # cancels out of the correction itself for a positive weight,
+                # so it changes only which points contribute: a zero-weighted
+                # point now contributes nothing, as it should.
+                X_pp, y_pp, _ = _rescale_data(X_pp, y_pp, sw)
 
             n_samples = X_pp.shape[0]
 

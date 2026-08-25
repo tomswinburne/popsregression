@@ -13,7 +13,8 @@ description = "Bayesian regression for low-noise data with misspecification unce
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
-  "scipy>=1.6.0",
+  # scipy.stats.qmc, used by the hypercube resampling, was added in 1.7.0.
+  "scipy>=1.7.0",
   "numpy>=1.20.0",
 ]
 classifiers = [
@@ -22,6 +23,9 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
     "License :: OSI Approved :: BSD License",
     "Operating System :: POSIX",
     "Operating System :: Unix",
@@ -68,7 +72,7 @@ dev = [
 
 [tool.black]
 line-length = 88
-target_version = ['py38', 'py39', 'py310']
+target_version = ['py39', 'py310', 'py311']
 preview = true
 exclude = '''
 /(
@@ -82,7 +86,7 @@ force-exclude = "popsregression/_version.py"
 [tool.ruff]
 # max line length for black
 line-length = 88
-target-version = "py38"
+target-version = "py39"
 exclude=[
     ".git",
     "__pycache__",

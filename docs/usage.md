@@ -134,14 +134,6 @@ model = POPSRegression(minimum_relative_error=0.5)
 If no point clears the threshold, all points are used, so an over-large value
 degrades to the unfiltered fit rather than failing.
 
-!!! warning "`leverage_percentile` is deprecated"
-    Earlier releases selected training points by leverage score percentile.
-    That parameter is deprecated since 0.5, is ignored, raises a
-    `FutureWarning`, and will be removed in 0.7. Replace
-    `leverage_percentile=0.0` (use all points) with
-    `minimum_relative_error=0.0`; otherwise the default
-    `minimum_relative_error=0.01` is a reasonable starting point.
-
 ### Sampling the hypercube posterior
 
 `resampling_method` controls how the fitted hypercube is sampled. The
@@ -258,7 +250,6 @@ when you need the uncertainty outputs.
 
 | Since | Removed in | Parameter | Replacement |
 |---|---|---|---|
-| 0.5 | 0.7 | `leverage_percentile` | `minimum_relative_error` |
 
 Importing the top-level `POPSRegression` module (`import POPSRegression`) is
 also deprecated; use `from popsregression import POPSRegression`.

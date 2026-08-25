@@ -4,7 +4,6 @@
 #          Danny Perez <danny_perez@lanl.gov>
 # SPDX-License-Identifier: BSD-3-Clause
 
-import warnings
 
 import numpy as np
 import pytest
@@ -426,38 +425,6 @@ def test_minimum_relative_error_falls_back_when_all_filtered():
     X, y, _ = _make_low_noise_data()
     model = POPSRegression(minimum_relative_error=1e12).fit(X, y)
     assert model._filtering_mask.all()
-
-
-# --- Deprecation of leverage_percentile ---
-
-
-def test_leverage_percentile_deprecated():
-    X, y, _ = _make_low_noise_data()
-    model = POPSRegression(leverage_percentile=50.0)
-    with pytest.warns(FutureWarning, match="leverage_percentile"):
-        model.fit(X, y)
-
-
-def test_leverage_percentile_is_ignored():
-    """The deprecated parameter no longer affects the fit."""
-    X, y, _ = _make_low_noise_data()
-
-    reference = POPSRegression(posterior="ensemble").fit(X, y)
-    with pytest.warns(FutureWarning):
-        deprecated = POPSRegression(posterior="ensemble", leverage_percentile=90.0).fit(
-            X, y
-        )
-
-    assert_allclose(
-        deprecated.misspecification_sigma_, reference.misspecification_sigma_
-    )
-
-
-def test_no_warning_without_leverage_percentile():
-    X, y, _ = _make_low_noise_data()
-    with warnings.catch_warnings():
-        warnings.simplefilter("error", FutureWarning)
-        POPSRegression().fit(X, y)
 
 
 # --- Cloning and get_params/set_params ---

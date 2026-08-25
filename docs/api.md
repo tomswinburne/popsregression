@@ -84,15 +84,6 @@ The full ellipsoid reference — mathematical background, the PAC-Bayes layer,
 and every key accepted by `posterior_options` — lives on the
 [Ellipsoid posteriors](ellipse.md) page.
 
-## Deprecated parameters
-
-| Since | Removed in | Parameter | Replacement |
-|---|---|---|---|
-| 0.5 | 0.7 | `leverage_percentile` | `minimum_relative_error` |
-
-Passing `leverage_percentile` raises a `FutureWarning` on `fit` and has no
-effect on the fitted model.
-
 The top-level `POPSRegression` module shim (`import POPSRegression`) is
 deprecated in favour of `from popsregression import POPSRegression` and raises
 a `DeprecationWarning` on import.

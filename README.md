@@ -93,13 +93,6 @@ y_pred, y_std, y_max, y_min, y_epistemic_std = model.predict(
 All `BayesianRidge` parameters (`max_iter`, `tol`, `alpha_1`, `alpha_2`,
 `lambda_1`, `lambda_2`, `fit_intercept`, etc.) are also supported.
 
-> [!WARNING]
-> `leverage_percentile` is deprecated since 0.5 and will be removed in 0.7.
-> Training points are now selected by relative residual magnitude: use
-> `minimum_relative_error` instead (`leverage_percentile=0.0` becomes
-> `minimum_relative_error=0.0`). Passing it raises a `FutureWarning` and has
-> no effect.
-
 ## Key attributes (after fitting)
 
 | Attribute | Description |
